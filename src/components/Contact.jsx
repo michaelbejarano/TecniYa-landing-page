@@ -1,0 +1,396 @@
+import { useEffect } from 'react'
+
+export default function Contact() {
+  useEffect(() => {
+    // ---- Eye tracking ----
+    const mascot = document.getElementById('mascot')
+    const leftEye = document.getElementById('fixya-eye-left')
+    const rightEye = document.getElementById('fixya-eye-right')
+    const emailInput = document.getElementById('lead-email')
+    if (!mascot || !leftEye || !rightEye || !emailInput) return
+
+    const EYE_TOP = 95
+    const EYE_R = 22
+    const LEFT_BASE = -40
+    const RIGHT_BASE = 40
+    const MAX_X = 14
+    const MAX_Y = 18
+    const SENSITIVITY = 380
+
+    function eyeCenters() {
+      const r = mascot.getBoundingClientRect()
+      const cx = r.left + r.width / 2
+      const cy = r.top + EYE_TOP + EYE_R
+      return {
+        left: { x: cx + LEFT_BASE, y: cy },
+        right: { x: cx + RIGHT_BASE, y: cy },
+      }
+    }
+
+    function clampEllipse(dx, dy, rx, ry) {
+      const nx = dx / rx
+      const ny = dy / ry
+      const d = Math.hypot(nx, ny)
+      if (d <= 1 || d === 0) return [dx, dy]
+      return [(nx / d) * rx, (ny / d) * ry]
+    }
+
+    function lookAt(x, y) {
+      const { left, right } = eyeCenters()
+      function offset(ex, ey) {
+        const dx = x - ex
+        const dy = y - ey
+        const p = Math.min(1, Math.hypot(dx, dy) / SENSITIVITY)
+        const a = Math.atan2(dy, dx)
+        const [mx, my] = clampEllipse(Math.cos(a) * MAX_X * p, Math.sin(a) * MAX_Y * p, MAX_X, MAX_Y)
+        return { mx, my }
+      }
+      const L = offset(left.x, left.y)
+      const R = offset(right.x, right.y)
+      leftEye.style.transform = `translateX(-50%) translateX(${LEFT_BASE}px) translate(${L.mx.toFixed(2)}px,${L.my.toFixed(2)}px)`
+      rightEye.style.transform = `translateX(-50%) translateX(${RIGHT_BASE}px) translate(${R.mx.toFixed(2)}px,${R.my.toFixed(2)}px)`
+    }
+
+    function neutralEyes() {
+      leftEye.style.transform = `translateX(-50%) translateX(${LEFT_BASE}px)`
+      rightEye.style.transform = `translateX(-50%) translateX(${RIGHT_BASE}px)`
+    }
+
+    const measureCtx = document.createElement('canvas').getContext('2d')
+    function caretPoint(input) {
+      const rect = input.getBoundingClientRect()
+      const cs = getComputedStyle(input)
+      measureCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
+      const before = input.value.slice(0, input.selectionStart ?? input.value.length)
+      const w = measureCtx.measureText(before).width
+      const padL = parseFloat(cs.paddingLeft) || 0
+      const innerW = rect.width - padL - (parseFloat(cs.paddingRight) || 0)
+      const xInside = Math.min(w, innerW) - input.scrollLeft
+      return { x: rect.left + padL + Math.max(0, xInside), y: rect.top + rect.height / 2 }
+    }
+
+    let lastPtr = { x: 0, y: 0 }
+    const isFocused = () => document.activeElement === emailInput
+
+    const onPointerMove = (e) => {
+      lastPtr = { x: e.clientX, y: e.clientY }
+      if (!isFocused()) lookAt(e.clientX, e.clientY)
+    }
+    document.addEventListener('pointermove', onPointerMove)
+
+    const caretEvents = ['input', 'click', 'keyup', 'keydown', 'mouseup']
+    const onCaret = () => {
+      if (isFocused()) {
+        const { x, y } = caretPoint(emailInput)
+        lookAt(x, y)
+      }
+    }
+    caretEvents.forEach((evt) => emailInput.addEventListener(evt, onCaret))
+
+    const onFocus = () => {
+      const { x, y } = caretPoint(emailInput)
+      lookAt(x, y)
+    }
+    const onBlur = () => lookAt(lastPtr.x, lastPtr.y)
+    emailInput.addEventListener('focus', onFocus)
+    emailInput.addEventListener('blur', onBlur)
+
+    // ---- Error mouth swap ----
+    const faceSvg = document.querySelector('.mask svg')
+    const mouthPath = faceSvg?.querySelector('.fixya-mouth')
+    const errorMsg = document.querySelector('.error-message')
+    const svgNS = 'http://www.w3.org/2000/svg'
+    let mouthEllipse = null
+
+    function swapMouthError() {
+      if (mouthEllipse || !mouthPath) return
+      const b = mouthPath.getBBox()
+      const el = document.createElementNS(svgNS, 'ellipse')
+      el.setAttribute('cx', String(b.x + b.width / 2))
+      el.setAttribute('cy', String(b.y + b.height / 2 + 5))
+      el.setAttribute('rx', '6')
+      el.setAttribute('ry', '10')
+      el.setAttribute('fill', '#1B4FFF')
+      mouthPath.style.display = 'none'
+      faceSvg.appendChild(el)
+      mouthEllipse = el
+      errorMsg?.classList.add('is-active')
+    }
+
+    function restoreMouth() {
+      mouthEllipse?.remove()
+      mouthEllipse = null
+      if (mouthPath) mouthPath.style.display = ''
+      errorMsg?.classList.remove('is-active')
+    }
+
+    // ---- Form submit ----
+    const form = document.getElementById('leadForm')
+    const emailError = document.getElementById('email-error')
+    const submitBtn = document.getElementById('submitBtn')
+    const btnText = document.getElementById('btn-text')
+    const btnLoading = document.getElementById('btn-loading')
+    const formSuccess = document.getElementById('form-success')
+
+    const onSubmit = async (e) => {
+      e.preventDefault()
+      const email = emailInput.value.trim()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailInput.classList.add('error')
+        emailError.classList.add('visible')
+        swapMouthError()
+        emailInput.focus()
+        return
+      }
+      restoreMouth()
+      emailInput.classList.remove('error')
+      emailError.classList.remove('visible')
+      submitBtn.disabled = true
+      btnText.style.display = 'none'
+      btnLoading.style.display = 'inline'
+
+      await new Promise((r) => setTimeout(r, 900))
+
+      const leads = JSON.parse(localStorage.getItem('fixya_leads') || '[]')
+      leads.push({
+        name: document.getElementById('lead-name').value,
+        email,
+        role: document.getElementById('lead-role').value,
+        ts: new Date().toISOString(),
+      })
+      localStorage.setItem('fixya_leads', JSON.stringify(leads))
+
+      if (typeof window.gtag !== 'undefined') {
+        window.gtag('event', 'formulario_enviado')
+      }
+
+      form.style.display = 'none'
+      formSuccess.style.display = 'block'
+      neutralEyes()
+    }
+    form?.addEventListener('submit', onSubmit)
+
+    const onEmailInput = () => {
+      emailInput.classList.remove('error')
+      emailError.classList.remove('visible')
+      if (emailInput.value.includes('@')) restoreMouth()
+    }
+    emailInput.addEventListener('input', onEmailInput)
+
+    return () => {
+      document.removeEventListener('pointermove', onPointerMove)
+      caretEvents.forEach((evt) => emailInput.removeEventListener(evt, onCaret))
+      emailInput.removeEventListener('focus', onFocus)
+      emailInput.removeEventListener('blur', onBlur)
+      emailInput.removeEventListener('input', onEmailInput)
+      form?.removeEventListener('submit', onSubmit)
+    }
+  }, [])
+
+  return (
+    <section className="contact" id="contacto">
+      <div className="contact-inner">
+        <div className="contact-text">
+          <span className="section-label">¿Te interesa?</span>
+          <h2>
+            Averigua como funciona<br />dejanos tu informacion
+          </h2>
+          <p>
+            Dejanos tu correo y te avisamos cuando TecniYa llegue a tu ciudad. O si quieres trabajar
+            como tecnico
+          </p>
+          <ul className="perks">
+            <li>🎁 Acceso anticipado con descuento</li>
+            <li>📬 Novedades del lanzamiento</li>
+            <li>🗓️ Invitación al beta privado</li>
+          </ul>
+        </div>
+
+        <div className="form-card">
+          {/* Mascot */}
+          <div className="mascot" id="mascot" aria-hidden="true">
+            {/* Error arc */}
+            <svg className="error-message" viewBox="0 0 500 500">
+              <path
+                id="fixya-curve"
+                fill="transparent"
+                d="M73.2,148.6c4-6.1,65.5-96.8,178.6-95.6c111.3,1.2,170.8,90.3,175.1,97"
+              />
+              <text className="error-text" fill="white" width="500" textAnchor="middle">
+                <textPath href="#fixya-curve" startOffset="50%">
+                  ¡Falta el correo!
+                </textPath>
+              </text>
+            </svg>
+            {/* Eye whites */}
+            <div className="eyeWhite" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="118" height="57" fill="none">
+                <ellipse cx="99" cy="28" fill="#fff" rx="19" ry="28" />
+                <ellipse cx="19" cy="28" fill="#fff" rx="19" ry="28" />
+              </svg>
+            </div>
+            {/* Left eyeball */}
+            <div className="eyeball-left" id="fixya-eye-left" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" fill="none">
+                <circle cx="20" cy="20" r="20" fill="url(#fixya-lg-l)" />
+                <circle cx="22" cy="11" r="6" fill="#FCF5F3" />
+                <circle cx="25" cy="20" r="3" fill="#FCF5F3" />
+                <defs>
+                  <linearGradient
+                    id="fixya-lg-l"
+                    x1="0"
+                    x2="35"
+                    y1="17.5"
+                    y2="17.5"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset=".317" stopColor="#1B4FFF" />
+                    <stop offset="1" stopColor="#0A1A6B" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            {/* Right eyeball */}
+            <div className="eyeball-right" id="fixya-eye-right" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" fill="none">
+                <circle cx="20" cy="20" r="20" fill="url(#fixya-lg-r)" />
+                <circle cx="23" cy="11" r="6" fill="#FCF5F3" />
+                <circle cx="26" cy="20" r="3" fill="#FCF5F3" />
+                <defs>
+                  <linearGradient
+                    id="fixya-lg-r"
+                    x1="0"
+                    x2="35"
+                    y1="17.5"
+                    y2="17.5"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop offset=".317" stopColor="#1B4FFF" />
+                    <stop offset="1" stopColor="#0A1A6B" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            {/* Face */}
+            <div className="mask">
+              <svg
+                width="232"
+                height="172"
+                fill="none"
+                viewBox="0 0 232 172"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient
+                    id="fixya-face-grad"
+                    x1="117.999"
+                    x2="118.004"
+                    y1="0"
+                    y2="168"
+                    gradientUnits="userSpaceOnUse"
+                  >
+                    <stop stopColor="#3D6FFF" />
+                    <stop offset=".2" stopColor="#2255EE" />
+                    <stop offset=".5" stopColor="#1B4FFF" />
+                    <stop offset=".75" stopColor="#0F35CC" />
+                    <stop offset="1" stopColor="#071A6B" />
+                  </linearGradient>
+                </defs>
+                <path
+                  fill="url(#fixya-face-grad)"
+                  d="M115.972 0c18.723 0 36.111 5.717 50.512 15.501 8.836-12.564 25.962-16.522 39.52-8.694 14.349 8.284 19.264 26.631 10.98 40.98A29.875 29.875 0 0 1 201.197 61c3.096 9.1 4.775 18.853 4.775 29 0 49.706-40.294 78-90 78-49.705 0-90-28.294-90-78 0-11.353 2.103-22.215 5.939-32.218a29.86 29.86 0 0 1-12.888-11.994c-8.284-14.349-3.368-32.696 10.98-40.98 13.405-7.74 30.3-3.958 39.219 8.272C82.847 4.78 98.852 0 115.972 0ZM75.023 82.807c-10.493 0-19 12.536-19 28s8.507 28 19 28c10.494 0 19-12.536 19-28s-8.506-28-19-28Zm80 0c-10.493 0-19 12.536-19 28s8.507 28 19 28c10.494 0 19-12.536 19-28s-8.506-28-19-28Z"
+                />
+                <path
+                  fill="#DBEAFF"
+                  d="M115.023 43.807c40.87 0 74 29.001 74 64.776 0 35.775-33.131 55.224-74 55.224s-74-19.449-74-55.224c0-35.775 33.131-64.776 74-64.776Zm-40 39c-10.493 0-19 12.536-19 28s8.507 28 19 28c10.494 0 19-12.536 19-28s-8.506-28-19-28Zm80 0c-10.493 0-19 12.536-19 28s8.507 28 19 28c10.494 0 19-12.536 19-28s-8.506-28-19-28Z"
+                />
+                <path
+                  fill="#1B4FFF"
+                  d="M75.504 75.077c-2.605-.046-8.154 1.337-12.012 3.029-.954.418-.556 1.312.467 1.114 12.928-2.505 20.976 1.09 20.976 1.09.985.357 1.706-.947.879-1.591l-.349-.271c-2.507-2.534-6.355-3.308-9.962-3.371ZM151.051 75.077c2.605-.046 8.153 1.337 12.012 3.029.954.418.556 1.312-.467 1.114-12.928-2.505-20.976 1.09-20.976 1.09-.985.357-1.706-.947-.879-1.591l.348-.271c2.507-2.534 6.355-3.308 9.962-3.371Z"
+                />
+                <path
+                  stroke="#A0BEFF"
+                  strokeWidth="2"
+                  d="M115 45c40.442 0 73 28.789 73 64.04 0 17.605-8.098 31.049-21.242 40.128C153.58 158.271 135.296 163 115 163c-20.296 0-38.58-4.729-51.758-13.832C50.1 140.089 42 126.645 42 109.04 42 73.789 74.558 45 115 45Z"
+                />
+                <ellipse cx="155.023" cy="110.807" stroke="#1B4FFF" strokeWidth="2" rx="19" ry="28" />
+                <ellipse cx="75.023" cy="110.807" stroke="#1B4FFF" strokeWidth="2" rx="19" ry="28" />
+                <path
+                  className="fixya-nose"
+                  fill="#1B4FFF"
+                  stroke="#1B4FFF"
+                  d="M118 121.5c1.644 0 3.036.174 4.005.697.473.256.839.591 1.09 1.029.251.439.405 1.014.405 1.774 0 .663-.296 1.333-.804 1.991-.506.657-1.196 1.265-1.912 1.79a4.696 4.696 0 0 1-5.568 0c-.716-.525-1.406-1.133-1.912-1.79-.508-.658-.804-1.328-.804-1.991 0-.76.154-1.335.405-1.774.251-.438.617-.773 1.09-1.029.969-.523 2.361-.697 4.005-.697Z"
+                />
+                <ellipse cx="120" cy="124.501" fill="#FCF5F3" rx="2" ry="1.5" />
+                <path
+                  className="fixya-mouth"
+                  stroke="#1B4FFF"
+                  strokeLinecap="round"
+                  strokeWidth="2"
+                  d="M130.283 141.002c-3.315 2.561-7.811 4-12.5 4-4.688 0-9.185-1.439-12.5-4M132.863 141.968l-.879-.424a5.134 5.134 0 0 1-2.467-2.543M103 142.299l.831-.513A5.137 5.137 0 0 0 106.02 139"
+                />
+                <path
+                  fill="#DBEAFF"
+                  stroke="#A0BEFF"
+                  strokeWidth="2"
+                  d="M17.105 139h24.98l5.031 5.031a53.938 53.938 0 0 0 6.972 5.881l5.77 4.088H31.532v2.169c0 6.817-2.99 12.999-9.164 14.242-1.919.387-3.769.589-5.262.589C8.204 171 1 163.831 1 155c0-8.693 6.981-15.776 15.69-15.995l.415-.005ZM214.895 139h-24.981l-5.03 5.031a53.988 53.988 0 0 1-6.972 5.881l-5.77 4.088h28.326v2.169c0 6.817 2.99 12.999 9.164 14.242 1.919.387 3.769.589 5.263.589 8.9 0 16.105-7.169 16.105-16 0-8.693-6.981-15.776-15.689-15.995l-.416-.005Z"
+                />
+                <path
+                  fill="#fff"
+                  opacity=".35"
+                  d="M117.5 31c27.062 0 46.5 13.773 46.5 13.773 0 2.45-19.438-9.273-46.5-9.273S71.5 46 66 44.773C66 44.773 90.438 31 117.5 31Z"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Success state */}
+          <div id="form-success" className="form-success" style={{ display: 'none' }}>
+            <span className="success-icon">🎉</span>
+            <h3>¡Ya estás en la lista!</h3>
+            <p>Te avisaremos cuando lleguemos a tu ciudad.</p>
+          </div>
+
+          {/* Form */}
+          <form id="leadForm" className="lead-form" noValidate>
+            <h3>Quiero saber mas</h3>
+            <div className="field">
+              <label htmlFor="lead-name">Tu nombre</label>
+              <input type="text" id="lead-name" name="name" placeholder="Ej. Carlos Quispe" />
+            </div>
+            <div className="field">
+              <label htmlFor="lead-email">
+                Correo electrónico <span className="req">*</span>
+              </label>
+              <input
+                type="email"
+                id="lead-email"
+                name="email"
+                placeholder="tucorreo@gmail.com"
+                required
+              />
+              <span className="field-error" id="email-error">
+                Por favor ingresa un correo válido.
+              </span>
+            </div>
+            <div className="field">
+              <label htmlFor="lead-role">¿Cómo te describes?</label>
+              <select id="lead-role" name="role" defaultValue="">
+                <option value="">Selecciona una opción</option>
+                <option value="cliente">Soy usuario y quiero usar la app</option>
+                <option value="tecnico">Soy técnico independiente y quiero trabajar</option>
+              </select>
+            </div>
+            <button type="submit" className="btn-submit" id="submitBtn">
+              <span id="btn-text">Unirme a la lista</span>
+              <span id="btn-loading" style={{ display: 'none' }}>
+                Enviando…
+              </span>
+            </button>
+            <p className="form-note">Sin spam. Puedes darte de baja cuando quieras.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  )
+}
