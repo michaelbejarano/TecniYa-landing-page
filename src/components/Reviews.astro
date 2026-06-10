@@ -1,0 +1,259 @@
+---
+// Reviews.astro - Sección de reseñas para TecniYa
+---
+
+<section class="reviews-section" id="resenas">
+  <p class="reviews-eyebrow">Lo que dicen nuestros usuarios</p>
+  <h2 class="reviews-title">Técnicos de <span>confianza</span>, Usuarios satisfechos</h2>
+  <p class="reviews-subtitle">Lo que nuestros usuarios dicen</p>
+
+  <div class="reviews-grid">
+
+    <div class="review-card">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">No sabía cómo conectar mi lavadora nueva. El técnico llegó en 20 minutos y lo resolvió al toque. Nunca más busco en Google.</p>
+      <div class="review-author">
+        <div class="review-avatar av-blue">MR</div>
+        <div>
+          <p class="review-name">María Rengifo</p>
+          <p class="review-service">Instalación de electrodoméstico</p>
+          <span class="review-badge">✓ Servicio verificado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Se me fue la luz a las 10 de la noche. Abrí TecniYa, pedí un electricista y en media hora tenía todo solucionado. Increíble.</p>
+      <div class="review-author">
+        <div class="review-avatar av-orange">CL</div>
+        <div>
+          <p class="review-name">Carlos Lozano</p>
+          <p class="review-service">Emergencia eléctrica</p>
+          <span class="review-badge">✓ Servicio verificado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Literalmente me salvó cuando mi gas no andaba y tenía visita. El técnico fue súper profesional y explicó todo lo que hizo.</p>
+      <div class="review-author">
+        <div class="review-avatar av-teal">SP</div>
+        <div>
+          <p class="review-name">Sandra Paredes</p>
+          <p class="review-service">Revisión de gasfitería</p>
+          <span class="review-badge">✓ Servicio verificado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">★★★★☆</div>
+      <p class="review-text">Usé la app para conectar mi router nuevo y no tenía idea. En 15 minutos el técnico ya tenía todo el WiFi funcionando. La recomiendo.</p>
+      <div class="review-author">
+        <div class="review-avatar av-purple">JV</div>
+        <div>
+          <p class="review-name">Javier Vargas</p>
+          <p class="review-service">Instalación de redes</p>
+          <span class="review-badge">✓ Servicio verificado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Llevaba días con el calefón sin agua caliente. Abrí TecniYa casi sin esperanza y el técnico llegó rapidísimo. Precio justo, trabajo limpio.</p>
+      <div class="review-author">
+        <div class="review-avatar av-pink">LM</div>
+        <div>
+          <p class="review-name">Luciana Mora</p>
+          <p class="review-service">Reparación de calefón</p>
+          <span class="review-badge">✓ Servicio verificado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">Me rompí el sifón del baño a las 8am. Sin TecniYa hubiera llegado tarde al trabajo. Gracias a la app tuve técnico antes que abrieran las ferreterías.</p>
+      <div class="review-author">
+        <div class="review-avatar av-green">AR</div>
+        <div>
+          <p class="review-name">Andrés Ríos</p>
+          <p class="review-service">Gasfitería urgente</p>
+          <span class="review-badge">✓ Servicio verificado</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  
+</section>
+
+<style>
+  .reviews-section {
+    padding: 80px 24px;
+    background: var(--bg);
+  }
+
+  .reviews-eyebrow {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 12px;
+  }
+
+  .reviews-title {
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .reviews-title span {
+    color: var(--blue);
+  }
+
+  .reviews-subtitle {
+    text-align: center;
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 48px;
+  }
+
+  .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 960px;
+    margin: 0 auto 48px;
+  }
+
+  .review-card {
+    background: var(--bg2);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .review-card:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .review-card::before {
+    content: '"';
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 48px;
+    color: var(--blue);
+    opacity: 0.2;
+    font-family: Georgia, serif;
+    line-height: 1;
+  }
+
+  .review-stars {
+    color: var(--orange);
+    font-size: 14px;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+
+  .review-text {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .review-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .review-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .av-blue   { background: rgba(27,79,255,0.15);  color: #3D6FFF; border: 1px solid rgba(27,79,255,0.3); }
+  .av-orange { background: rgba(255,92,26,0.15);  color: #FF7A44; border: 1px solid rgba(255,92,26,0.3); }
+  .av-teal   { background: rgba(29,158,117,0.15); color: #5DCAA5; border: 1px solid rgba(29,158,117,0.3); }
+  .av-purple { background: rgba(83,74,183,0.15);  color: #7F77DD; border: 1px solid rgba(83,74,183,0.3); }
+  .av-pink   { background: rgba(212,83,126,0.15); color: #ED93B1; border: 1px solid rgba(212,83,126,0.3); }
+  .av-green  { background: rgba(99,153,34,0.15);  color: #97C459; border: 1px solid rgba(99,153,34,0.3); }
+
+  .review-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .review-service {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .review-badge {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 11px;
+    background: rgba(27,79,255,0.1);
+    color: var(--blue-lt);
+    border: 0.5px solid rgba(27,79,255,0.2);
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+
+  .reviews-stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    border-top: 0.5px solid var(--border);
+    padding-top: 40px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  .stat-number span {
+    color: var(--blue);
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+</style>
