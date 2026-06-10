@@ -433,9 +433,14 @@
     });
     localStorage.setItem('fixya_leads', JSON.stringify(leads));
 
+    if (typeof gtag !== 'undefined') {
+    gtag('event', 'formulario_enviado');
+    }
+
     form.style.display = 'none';
     formSuccess.style.display = 'block';
     neutralEyes();
+    
   });
 
   emailInput.addEventListener('input', () => {
