@@ -40,6 +40,16 @@ const { title = "TecniYa — Técnicos a un toque", description = "Conectamos tu
       }
       ::selection { background: var(--blue); color: #fff; }
     </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6B0SWZW1S8"></script>
+
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-6B0SWZW1S8');
+    </script>
   </head>
   <body>
     <slot />
